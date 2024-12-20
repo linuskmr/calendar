@@ -12,7 +12,7 @@ import (
 
 func main() {
 	port := flag.String("addr", ":8080", "Address to listen on")
-	dbFile := flag.String("db", "test.db", "Database file")
+	dbFile := flag.String("db", "sqlite.db", "Database file")
 	flag.Parse()
 
 	db, err := gorm.Open(sqlite.Open(*dbFile), &gorm.Config{})
@@ -20,33 +20,29 @@ func main() {
 		panic(err)
 	}
 
-	db.AutoMigrate(&Calendar{}, &Event{})
+	db.AutoMigrate(&Event{})
 
 	seeding(db)
 
-	server := &Server{db: db}
+	server := &Server{Db: db}
 
-	http.HandleFunc("GET /api/calendar/{name}/events", server.ApiCalendarView)
-	http.HandleFunc("GET /api/event/{id}", server.ApiGetEvent)
-	http.HandleFunc("POST /api/event", server.ApiAddEvent)
+	http.HandleFunc("GET /api/events", server.ApiEventList)
+	http.HandleFunc("GET /api/event/{event_id}", server.ApiGetEvent)
+	http.HandleFunc("POST /api/event", server.ApiAddOrUpdateEvent)
+	http.HandleFunc("POST /api/event/{id}", server.ApiAddOrUpdateEvent)
 
-	http.HandleFunc("GET /calendar/{name}/events/add", server.ShowAddEventForm)
-	http.HandleFunc("POST /calendar/{name}/events", server.AddFormEvent)
-	http.HandleFunc("GET /calendar/{name}/events", server.CalendarView)
+	http.HandleFunc("GET /events/add", server.ShowAddEventForm)
+	http.HandleFunc("GET /events/{event_id}/edit", server.ShowEditEventForm)
+	http.HandleFunc("POST /events", server.AddOrUpdateFormEvent)
+	http.HandleFunc("POST /events/{id}", server.AddOrUpdateFormEvent)
+
+	http.HandleFunc("GET /events", server.EventList)
 
 	log.Println("Listening on port", *port)
 	http.ListenAndServe(*port, nil)
 }
 
 func seeding(db *gorm.DB) {
-	calendar := Calendar{
-		Name: "test-calendar",
-	}
-	result := db.FirstOrCreate(&calendar, calendar)
-	if result.Error != nil {
-		panic(result.Error)
-	}
-
 	start, err := time.Parse(time.RFC3339, "2024-12-08T11:00:00+01:00")
 	if err != nil {
 		panic(err)
@@ -58,13 +54,12 @@ func seeding(db *gorm.DB) {
 
 	event := Event{
 		Title:       "Test Event",
-		CalendarID:  calendar.ID,
 		Start:       start,
 		End:         end,
 		Location:    "Test Location",
 		Description: "Test Description",
 	}
-	result = db.FirstOrCreate(&event, event)
+	result := db.FirstOrCreate(&event, event)
 	if result.Error != nil {
 		panic(result.Error)
 	}

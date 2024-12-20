@@ -2,10 +2,11 @@
 {{define "scripts"}}{{end}}
 
 {{ define "body" }}
-	<h1>{{ .Calendar.Name }}</h1>
 	<small>{{ .Start.Format "02 Jan 2006" }} - {{ .End.Format "02 Jan 2006" }}</small>
 
-	<p><a href="/calendar/{{ .Calendar.Name }}/events/add">Add Event</a></p>
+	<p><a href="/events/add">Add Event</a></p>
+
+	<hr>
 
 	{{ if eq (len .Events) 0 }}
 		<p>Empty directory</p>
