@@ -1,0 +1,5 @@
+# Sqlite
+*.db
+
+# Binary
+calendar
