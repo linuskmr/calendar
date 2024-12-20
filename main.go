@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"time"
@@ -25,14 +26,17 @@ func main() {
 
 	server := &Server{db: db}
 
-	http.HandleFunc("/calendar/{name}", server.CalendarView)
-	http.HandleFunc("/event/{id}", server.Event)
-	port := ":8080"
-	log.Println("Listening on port", port)
-	http.ListenAndServe(port, nil)
+	http.HandleFunc("GET /api/calendar/{name}/events", server.ApiCalendarView)
+	http.HandleFunc("GET /api/event/{id}", server.ApiGetEvent)
+	http.HandleFunc("POST /api/event", server.ApiAddEvent)
+
+	http.HandleFunc("GET /calendar/{name}/events/add", server.ShowAddEventForm)
+	http.HandleFunc("POST /calendar/{name}/events", server.AddFormEvent)
+	http.HandleFunc("GET /calendar/{name}/events", server.CalendarView)
+
+	log.Println("Listening on port", *port)
+	http.ListenAndServe(*port, nil)
 }
-
-
 
 func seeding(db *gorm.DB) {
 	calendar := Calendar{
@@ -53,11 +57,11 @@ func seeding(db *gorm.DB) {
 	}
 
 	event := Event{
-		Title: "Test Event",
-		CalendarID: calendar.ID,
-		StartDate: start,
-		EndDate: end,
-		Location: "Test Location",
+		Title:       "Test Event",
+		CalendarID:  calendar.ID,
+		Start:       start,
+		End:         end,
+		Location:    "Test Location",
 		Description: "Test Description",
 	}
 	result = db.FirstOrCreate(&event, event)
