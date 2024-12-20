@@ -10,7 +10,11 @@ import (
 )
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	port := flag.String("addr", ":8080", "Address to listen on")
+	dbFile := flag.String("db", "test.db", "Database file")
+	flag.Parse()
+
+	db, err := gorm.Open(sqlite.Open(*dbFile), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
