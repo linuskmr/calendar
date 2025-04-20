@@ -1,36 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ template "title" . }}</title>
-  {{ template "scripts" }}
+{{ define "header" }}
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>{{ template "title" . }}</title>
+		<link rel="stylesheet" href="/static/style.css">
+	</head>
+	<body>
+{{ end }}
 
-  <style>
-    body {
-      font-family: sans-serif;
-    }
-    nav ul {
-      margin: 0;
-      padding: 0;
-    }
-    nav ul li {
-      display: inline;
-    }
-    nav ul > li+li::before {
-      content: "/ ";
-    }
-
-    details {
-      display: inline;
-      border: 1px solid #aaa;
-      padding: 0.2em;
-      border-radius: 0.2em;
-      margin: 0.5em 0;
-    }
-  </style>
-</head>
-<body>
-
-{{ template "body" . }}
-</body>
-</html>
+{{ define "footer" }}
+	</body>
+	</html>
+{{ end }}

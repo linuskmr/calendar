@@ -1,0 +1,18 @@
+{{define "title"}}Event{{end}}
+
+{{ template "header" . }}
+
+<a href="/events">← Events</a>
+
+<h2>{{ .Title }}</h2>
+<p>{{ .Description }}</p>
+<p>{{ .Start.Format "02 Jan 2006 15:04" }} - {{ .End.Format "02 Jan 2006 15:04" }}</p>
+{{ if .Location }}
+	<p>📍 {{ .Location }}</p>
+{{ end }}
+{{ if .Description }}
+	<pre>🖹 {{ .Description }}</pre>
+{{ end }}
+
+
+{{ template "footer" . }}

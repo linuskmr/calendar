@@ -1,0 +1,28 @@
+{{define "title"}}Directory overview{{end}}
+
+{{ template "header" . }}
+
+
+<form method="POST" action="{{ .FormActionUrl }}">
+	<label for="title">Title</label><br>
+	<input type="text" id="title" name="title" value="{{ .Event.Title }}" required><br><br>
+
+	<label for="start">Start</label><br>
+	<input type="datetime-local" id="start" name="start" value="{{ .Event.Start }}" required><br><br>
+
+	<label for="end">End</label><br>
+	<input type="datetime-local" id="end" name="end" value="{{ .Event.End }}" required><br><br>
+
+	<label for="location">Location</label><br>
+	<input type="text" id="location" name="location" value="{{ .Event.Location }}"><br><br>
+
+	<label for="description">Description</label><br>
+	<textarea id="description" name="description" value="{{ .Event.Description }}"></textarea><br><br>
+
+	<button type="submit">Save</button>
+</form>
+
+
+{{ template "footer" . }}
+
+
