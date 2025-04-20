@@ -6,7 +6,6 @@ import (
 	"math/bits"
 	"net/http"
 	"strconv"
-	"text/template"
 	"time"
 
 	"gorm.io/gorm"
@@ -32,15 +31,8 @@ func (s *Server) EventList(w http.ResponseWriter, r *http.Request) {
 	if eventList == nil {
 		return // Error was already responded
 	}
-
-	eventListTemplate, err := template.ParseFiles("templates/base.html", "templates/event/list.html")
-	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
-		return
-	}
-
-	err = eventListTemplate.Execute(w, eventList)
+	
+	err := templates.ExecuteTemplate(w, "event-list.html", eventList)
 	if err != nil {
 		log.Printf("Error executing template: %v", err)
 		http.Error(w, "Error executing template", http.StatusInternalServerError)
@@ -48,30 +40,8 @@ func (s *Server) EventList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) ShowAddEventForm(w http.ResponseWriter, r *http.Request) {
-	addEventFormTemplate, err := template.ParseFiles("templates/base.html", "templates/event/form.html")
-	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
-		return
-	}
-
-	err = addEventFormTemplate.Execute(w, struct {
-		FormActionUrl string
-		Event Event
-	}{
-		FormActionUrl: "/events",
-		Event: Event{},
-	})
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Error executing template", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (s *Server) ShowEditEventForm(w http.ResponseWriter, r *http.Request) {
-	eventId, err := strconv.Atoi(r.PathValue("id"))
+func (s *Server) ShowEvent(w http.ResponseWriter, r *http.Request) {
+	eventId, err := strconv.Atoi(r.PathValue("event_id"))
 	if err != nil {
 		http.Error(w, "Invalid event id", http.StatusBadRequest)
 		return
@@ -91,14 +61,51 @@ func (s *Server) ShowEditEventForm(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	editEventFormTemplate, err := template.ParseFiles("templates/base.html", "templates/event/form.html")
+	err = templates.ExecuteTemplate(w, "event.html", event)
 	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Error executing template", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *Server) ShowAddEventForm(w http.ResponseWriter, r *http.Request) {
+	err := templates.ExecuteTemplate(w, "event-form.html", struct {
+		FormActionUrl string
+		Event Event
+	}{
+		FormActionUrl: "/events",
+		Event: Event{},
+	})
+	if err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Error executing template", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *Server) ShowEditEventForm(w http.ResponseWriter, r *http.Request) {
+	eventId, err := strconv.Atoi(r.PathValue("event_id"))
+	if err != nil {
+		http.Error(w, "Invalid event id", http.StatusBadRequest)
 		return
 	}
 
-	err = editEventFormTemplate.Execute(w, struct {
+	// Fetch event from database
+	var event Event
+	result := s.Db.Where("id = ?", eventId).Take(&event)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			http.Error(w, "Event not found", http.StatusNotFound)
+			return
+		} else {
+			log.Println("Error fetching event", result.Error)
+			http.Error(w, "Error fetching event", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = templates.ExecuteTemplate(w, "event-form.html", struct {
 		FormActionUrl string
 		Event Event
 	}{
