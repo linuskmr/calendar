@@ -1,0 +1,26 @@
+body {
+	font-family: sans-serif;
+  }
+  nav ul {
+	margin: 0;
+	padding: 0;
+  }
+  nav ul li {
+	display: inline;
+  }
+  nav ul > li+li::before {
+	content: "/ ";
+  }
+
+  details {
+	display: inline;
+	border: 1px solid #aaa;
+	padding: 0.2em;
+	border-radius: 0.2em;
+	margin: 0.5em 0;
+  }
+
+  a:has(article) {
+	text-decoration: none;
+	color: inherit;
+  }
