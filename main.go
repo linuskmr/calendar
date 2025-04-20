@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -9,6 +11,14 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+//go:embed static/*
+var staticFs embed.FS
+
+//go:embed templates/*
+var templateFs embed.FS
+
+var templates = template.Must(template.ParseFS(templateFs, "templates/*.html"))
 
 func main() {
 	port := flag.String("addr", ":8080", "Address to listen on")
@@ -26,20 +36,28 @@ func main() {
 
 	server := &Server{Db: db}
 
+	http.HandleFunc("GET /{$}", http.RedirectHandler("/events", http.StatusFound).ServeHTTP)
+
 	http.HandleFunc("GET /api/events", server.ApiEventList)
-	http.HandleFunc("GET /api/event/{event_id}", server.ApiGetEvent)
-	http.HandleFunc("POST /api/event", server.ApiAddOrUpdateEvent)
-	http.HandleFunc("POST /api/event/{id}", server.ApiAddOrUpdateEvent)
+	http.HandleFunc("GET /api/events/{event_id}", server.ApiGetEvent)
+	http.HandleFunc("POST /api/events", server.ApiAddOrUpdateEvent)
+	http.HandleFunc("PATCH /api/events/{id}", server.ApiAddOrUpdateEvent)
 
 	http.HandleFunc("GET /events/add", server.ShowAddEventForm)
+	http.HandleFunc("GET /events/{event_id}", server.ShowEvent)
 	http.HandleFunc("GET /events/{event_id}/edit", server.ShowEditEventForm)
 	http.HandleFunc("POST /events", server.AddOrUpdateFormEvent)
 	http.HandleFunc("POST /events/{id}", server.AddOrUpdateFormEvent)
-
 	http.HandleFunc("GET /events", server.EventList)
 
+	staticHttpPath := "/static/"
+	http.HandleFunc("GET " + staticHttpPath, http.FileServerFS(staticFs).ServeHTTP)
+
 	log.Println("Listening on port", *port)
-	http.ListenAndServe(*port, nil)
+	err = http.ListenAndServe(*port, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func seeding(db *gorm.DB) {
